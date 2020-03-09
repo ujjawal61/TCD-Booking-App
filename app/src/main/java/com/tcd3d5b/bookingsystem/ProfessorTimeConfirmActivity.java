@@ -1,6 +1,7 @@
 package com.tcd3d5b.bookingsystem;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -22,6 +23,7 @@ public class ProfessorTimeConfirmActivity extends AppCompatActivity {
     private static final String TAG = "status_p";
     private ListView lv;
     private DatabaseReference mDatabase;
+    static final String myprefs = "myprefs";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,14 +32,20 @@ public class ProfessorTimeConfirmActivity extends AppCompatActivity {
 
         Bundle bundle = getIntent().getExtras();
         ArrayList list = bundle.getParcelableArrayList("timetable");
+        final String chosenDate = bundle.getString("chosenDate");
         List<Map<String, Object>> lists= (List<Map<String, Object>>)list.get(0);
+
+        SharedPreferences mpreferences = getSharedPreferences(myprefs,MODE_PRIVATE);
+        SharedPreferences.Editor editor = mpreferences.edit();
+
+        final String professorEmail = mpreferences.getString(getString(R.string.email),"");
 
         Intent intent = getIntent();
 
         lv = (ListView) findViewById(R.id.listView1);
         final ArrayList<HashMap<String, Object>> listItem = new ArrayList<HashMap<String, Object>>();
         TextView tv = findViewById(R.id.header_date);
-        tv.setText(intent.getStringExtra("pdate_key"));
+        tv.setText(chosenDate);
 
         for (Map<String, Object> m : lists) {
             for (String k : m.keySet()) {
@@ -58,8 +66,13 @@ public class ProfessorTimeConfirmActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
                 mDatabase = FirebaseDatabase.getInstance().getReference();
                 HashMap<String, Object> map = listItem.get(arg2);
-                String professor = "p1";
-                String date = "2020-02-26";
+                String professor;
+                if(professorEmail.equals("professor1@tcd.ie")) {
+                    professor = "p1";
+                } else {
+                    professor = "p2";
+                }
+                String date = chosenDate;
                 String time = map.get("ItemTitle").toString().substring(7);
                 mDatabase.child("professor").child(professor).child("timetable").child(date).child(time).setValue("booked");
                 //startActivity(new Intent(ProfessorTimeConfirmActivity.this, BookedTimeConfirmActivity.class));
